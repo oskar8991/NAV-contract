@@ -188,3 +188,70 @@ contract Ownable {
         _owner = newOwner;
     }
 }
+
+
+// NAV Contract
+contract NAV is IERC20, Ownable {
+
+    using SafeMath for uint256;
+    using SafeMathInt for int256;
+
+    string public name;
+    string public symbol;
+    uint8 public decimals;
+
+    uint256 public _totalSupply;
+
+    mapping(address => uint) balances;
+    mapping(address => mapping(address => uint)) allowed;
+
+
+    constructor() public {
+        name = "NAV";
+        symbol = "NAV";
+        decimals = 18;
+        _totalSupply = 100000000000000000000000000;
+
+        balances[msg.sender] = _totalSupply;
+        emit Transfer(address(0), msg.sender, _totalSupply);
+    }
+
+    function totalSupply() override public view returns (uint) {
+        return _totalSupply  - balances[address(0)];
+    }
+
+    function balanceOf(address tokenOwner) override public view returns (uint balance) {
+        return balances[tokenOwner];
+    }
+
+    function allowance(address tokenOwner, address spender) override public view returns (uint remaining) {
+        return allowed[tokenOwner][spender];
+    }
+
+    function approve(address spender, uint tokens) override public returns (bool success) {
+        allowed[msg.sender][spender] = tokens;
+        emit Approval(msg.sender, spender, tokens);
+        return true;
+    }
+
+    function transfer(address to, uint tokens) override public returns (bool success) {
+        //balances[msg.sender] = Sub(balances[msg.sender], tokens);
+        //balances[to] = safeAdd(balances[to], tokens);
+        balances[msg.sender] = balances[msg.sender].sub(tokens);
+        balances[to].add(tokens);
+        emit Transfer(msg.sender, to, tokens);
+        return true;
+    }
+
+    function transferFrom(address from, address to, uint tokens) override public returns (bool success) {
+        //balances[from] = safeSub(balances[from], tokens);
+        //allowed[from][msg.sender] = safeSub(allowed[from][msg.sender], tokens);
+        //balances[to] = safeAdd(balances[to], tokens);
+        balances[from].sub(tokens);
+        allowed[from][msg.sender].sub(tokens);
+        balances[to].add(tokens);
+        emit Transfer(from, to, tokens);
+        return true;
+    }
+
+}
